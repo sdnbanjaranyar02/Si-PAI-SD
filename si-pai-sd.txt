@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#065f46">
+    <title>Si-PAI SD | Aplikasi Administrasi Guru</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlNpLVBBSSBTRCIsCiAgInNob3J0X25hbWUiOiAiU2lQQUkiLAogICJkZXNjcmlwdGlvbiI6ICJTaXN0ZW0gQWRtaW5pc3RyYXNpIEd1cnUgUEFJIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmOGZhZmMiLAogICJ0aGVtZV9jb2xvciI6ICIjMDY1ZjQ2Igp9">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .active-tab { display: block; animation: fadeIn 0.3s ease-in-out; }
+        .hidden-tab { display: none; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass-nav {
+            background: rgba(6, 95, 70, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #059669; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Login Page -->
+    <section id="login-page" class="fixed inset-0 z-[100] bg-emerald-900 flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl text-center">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-700 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-mosque text-4xl"></i>
+            </div>
+            <h1 class="text-2xl font-extrabold text-slate-800 mb-2">Si-PAI SD</h1>
+            <p class="text-slate-500 text-sm mb-8">Sistem Administrasi Guru PAI Berbasis Web & Mobile</p>
+            
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 ml-4 uppercase">Username</label>
+                    <input type="text" id="user-input" class="w-full bg-slate-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-emerald-500 transition-all outline-none" placeholder="admin">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 ml-4 uppercase">Password</label>
+                    <input type="password" id="pass-input" class="w-full bg-slate-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-emerald-500 transition-all outline-none" placeholder="••••••••">
+                </div>
+                <button onclick="authAction()" class="w-full bg-emerald-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all mt-4">
+                    Masuk Sekarang
+                </button>
+            </div>
+            
+            <p class="mt-8 text-[10px] text-slate-400 font-bold tracking-widest uppercase">Versi 2.0 (Offline Ready)</p>
+        </div>
+    </section>
+
+    <!-- Main App -->
+    <main id="app-container" class="hidden min-h-screen pb-24">
+        <!-- Top Nav -->
+        <nav class="glass-nav sticky top-0 z-50 text-white p-4 shadow-lg">
+            <div class="max-w-5xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-layer-group text-sm"></i>
+                    </div>
+                    <span class="font-extrabold tracking-tight">Si-PAI</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="status-badge" class="bg-emerald-400/20 text-emerald-300 text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span> OFFLINE MODE
+                    </div>
+                    <button onclick="logout()" class="text-white/60 hover:text-white transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="max-w-5xl mx-auto p-4 md:p-8">
+            
+            <!-- Tab: Dashboard -->
+            <section id="tab-home" class="tab-content active-tab">
+                <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center gap-6 mb-8">
+                    <img id="view-foto" src="https://via.placeholder.com/150" class="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] object-cover border-4 border-emerald-50">
+                    <div class="text-center md:text-left">
+                        <h2 id="view-nama" class="text-2xl font-extrabold text-slate-800">Guru PAI</h2>
+                        <p id="view-nip" class="text-slate-400 font-medium text-sm">NIP. -</p>
+                        <div class="mt-3 flex flex-wrap justify-center md:justify-start gap-2">
+                            <span id="view-unit" class="bg-emerald-50 text-emerald-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">SD NEGERI -</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100">
+                        <i class="fas fa-users text-emerald-500 mb-4"></i>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Siswa</p>
+                        <h4 id="count-siswa" class="text-2xl font-black">0</h4>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100">
+                        <i class="fas fa-book text-blue-500 mb-4"></i>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Jurnal</p>
+                        <h4 id="count-jurnal" class="text-2xl font-black">0</h4>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 col-span-2">
+                        <i class="fas fa-calendar-check text-amber-500 mb-4"></i>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Hari Ini</p>
+                        <h4 id="date-now" class="text-sm font-extrabold text-slate-700 mt-1">--</h4>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Profil -->
+            <section id="tab-profil" class="tab-content hidden-tab">
+                <div class="max-w-2xl mx-auto bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-slate-100">
+                    <div class="bg-emerald-800 h-24 relative">
+                        <label for="input-foto" class="absolute -bottom-10 left-8 group cursor-pointer">
+                            <img id="preview-foto" src="https://via.placeholder.com/150" class="w-28 h-28 rounded-3xl object-cover border-4 border-white bg-slate-200">
+                            <div class="absolute inset-0 bg-black/30 rounded-3xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                                <i class="fas fa-camera text-white text-xl"></i>
+                            </div>
+                            <input type="file" id="input-foto" class="hidden" accept="image/*" onchange="handleImage(this)">
+                        </label>
+                    </div>
+                    <div class="pt-16 p-8 space-y-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 ml-2 uppercase">Nama Lengkap</label>
+                                <input type="text" id="set-nama" class="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 ml-2 uppercase">NIP / NUPTK</label>
+                                <input type="text" id="set-nip" class="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 ml-2 uppercase">Unit Kerja</label>
+                                <input type="text" id="set-unit" class="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 ml-2 uppercase">Jabatan</label>
+                                <input type="text" id="set-jabatan" class="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                        </div>
+                        <button onclick="saveProfil()" class="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all">
+                            Simpan Perubahan
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Jurnal -->
+            <section id="tab-jurnal" class="tab-content hidden-tab">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-black">Jurnal Mengajar</h2>
+                    <button onclick="openJurnalModal()" class="bg-emerald-600 text-white px-5 py-2 rounded-xl font-bold text-sm">+ Jurnal</button>
+                </div>
+                <div id="jurnal-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </section>
+
+            <!-- Tab: Siswa & Nilai (Combined for simplicity on mobile) -->
+            <section id="tab-data" class="tab-content hidden-tab">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-black">Data & Nilai</h2>
+                    <button onclick="openSiswaModal()" class="bg-slate-800 text-white px-5 py-2 rounded-xl font-bold text-sm">+ Siswa</button>
+                </div>
+                <div class="bg-white rounded-3xl border border-slate-100 overflow-hidden overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b">
+                            <tr>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Siswa</th>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400 text-center">Kelas</th>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400 text-center">Nilai Rerata</th>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="siswa-list" class="divide-y divide-slate-50"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Bottom Nav -->
+        <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-slate-100 px-6 py-3 flex justify-between items-center z-50">
+            <button onclick="nav('home')" class="nav-btn flex flex-col items-center gap-1 text-emerald-600">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-[9px] font-black uppercase">Beranda</span>
+            </button>
+            <button onclick="nav('data')" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
+                <i class="fas fa-users text-lg"></i>
+                <span class="text-[9px] font-black uppercase">Data</span>
+            </button>
+            <button onclick="nav('jurnal')" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
+                <i class="fas fa-book-open text-lg"></i>
+                <span class="text-[9px] font-black uppercase">Jurnal</span>
+            </button>
+            <button onclick="nav('profil')" class="nav-btn flex flex-col items-center gap-1 text-slate-400">
+                <i class="fas fa-user-circle text-lg"></i>
+                <span class="text-[9px] font-black uppercase">Profil</span>
+            </button>
+        </nav>
+    </main>
+
+    <!-- Modal Jurnal -->
+    <div id="modal-jurnal" class="fixed inset-0 z-[110] bg-slate-900/60 hidden backdrop-blur-sm p-4 flex items-center justify-center">
+        <div class="bg-white w-full max-w-lg rounded-[2rem] p-8">
+            <h3 class="text-xl font-black mb-6">Catatan Kegiatan KBM</h3>
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 ml-2">TANGGAL</label>
+                        <input type="date" id="jur-tgl" class="w-full bg-slate-50 p-3 rounded-xl outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 ml-2">KELAS</label>
+                        <select id="jur-kls" class="w-full bg-slate-50 p-3 rounded-xl outline-none">
+                            <option>1</option><option>2</option><option>3</option>
+                            <option>4</option><option>5</option><option>6</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 ml-2">MATERI POKOK</label>
+                    <input type="text" id="jur-materi" class="w-full bg-slate-50 p-3 rounded-xl outline-none" placeholder="Isi materi...">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 ml-2">KEGIATAN & REFLEKSI</label>
+                    <textarea id="jur-ket" class="w-full bg-slate-50 p-3 rounded-xl outline-none h-24" placeholder="Apa yang dipelajari hari ini?"></textarea>
+                </div>
+                <div class="flex gap-2 pt-4">
+                    <button onclick="closeModal('modal-jurnal')" class="flex-1 py-4 font-bold text-slate-400">Batal</button>
+                    <button onclick="saveJurnal()" class="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-bold">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Siswa -->
+    <div id="modal-siswa" class="fixed inset-0 z-[110] bg-slate-900/60 hidden backdrop-blur-sm p-4 flex items-center justify-center">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8">
+            <h3 class="text-xl font-black mb-6">Tambah Siswa</h3>
+            <div class="space-y-4">
+                <input type="text" id="sis-nama" class="w-full bg-slate-50 p-4 rounded-xl outline-none" placeholder="Nama Lengkap">
+                <select id="sis-kls" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
+                    <option value="1">Kelas 1</option><option value="2">Kelas 2</option><option value="3">Kelas 3</option>
+                    <option value="4">Kelas 4</option><option value="5">Kelas 5</option><option value="6">Kelas 6</option>
+                </select>
+                <button onclick="saveSiswa()" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black mt-4">Simpan Siswa</button>
+                <button onclick="closeModal('modal-siswa')" class="w-full text-slate-400 font-bold py-2">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // -- CORE ENGINE --
+        const state = {
+            isLoggedIn: localStorage.getItem('sipai_auth') === 'true',
+            profil: JSON.parse(localStorage.getItem('sipai_profil')) || {
+                nama: 'Guru PAI', nip: '-', unit: 'SD NEGERI -', jabatan: 'Guru PAI', foto: ''
+            },
+            siswa: JSON.parse(localStorage.getItem('sipai_siswa')) || [],
+            jurnal: JSON.parse(localStorage.getItem('sipai_jurnal')) || []
+        };
+
+        function sync() {
+            localStorage.setItem('sipai_auth', state.isLoggedIn);
+            localStorage.setItem('sipai_profil', JSON.stringify(state.profil));
+            localStorage.setItem('sipai_siswa', JSON.stringify(state.siswa));
+            localStorage.setItem('sipai_jurnal', JSON.stringify(state.jurnal));
+            render();
+        }
+
+        // -- AUTH --
+        function authAction() {
+            const u = document.getElementById('user-input').value;
+            const p = document.getElementById('pass-input').value;
+            if(u === 'admin' && p === 'admin') {
+                state.isLoggedIn = true;
+                sync();
+            } else { alert('Gagal! Gunakan admin/admin'); }
+        }
+
+        function logout() {
+            if(confirm('Keluar aplikasi?')) {
+                state.isLoggedIn = false;
+                sync();
+            }
+        }
+
+        // -- NAV --
+        function nav(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => {
+                t.classList.replace('active-tab', 'hidden-tab');
+            });
+            document.getElementById('tab-' + tabId).classList.replace('hidden-tab', 'active-tab');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.replace('text-emerald-600', 'text-slate-400');
+            });
+            event.currentTarget.classList.replace('text-slate-400', 'text-emerald-600');
+            window.scrollTo(0,0);
+        }
+
+        // -- PROFIL --
+        function handleImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    state.profil.foto = e.target.result;
+                    document.getElementById('preview-foto').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveProfil() {
+            state.profil.nama = document.getElementById('set-nama').value;
+            state.profil.nip = document.getElementById('set-nip').value;
+            state.profil.unit = document.getElementById('set-unit').value;
+            state.profil.jabatan = document.getElementById('set-jabatan').value;
+            sync();
+            alert('Profil disimpan!');
+            nav('home');
+        }
+
+        // -- JURNAL --
+        function openJurnalModal() { document.getElementById('modal-jurnal').style.display = 'flex'; }
+        function openSiswaModal() { document.getElementById('modal-siswa').style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function saveJurnal() {
+            const data = {
+                id: Date.now(),
+                tgl: document.getElementById('jur-tgl').value,
+                kls: document.getElementById('jur-kls').value,
+                materi: document.getElementById('jur-materi').value,
+                ket: document.getElementById('jur-ket').value
+            };
+            if(!data.materi) return;
+            state.jurnal.unshift(data);
+            closeModal('modal-jurnal');
+            sync();
+        }
+
+        function delJurnal(id) {
+            state.jurnal = state.jurnal.filter(j => j.id !== id);
+            sync();
+        }
+
+        // -- SISWA --
+        function saveSiswa() {
+            const nama = document.getElementById('sis-nama').value;
+            const kls = document.getElementById('sis-kls').value;
+            if(!nama) return;
+            state.siswa.push({ id: Date.now(), nama, kls, nilai: 0 });
+            closeModal('modal-siswa');
+            sync();
+        }
+
+        function delSiswa(id) {
+            state.siswa = state.siswa.filter(s => s.id !== id);
+            sync();
+        }
+
+        // -- RENDERER --
+        function render() {
+            const login = document.getElementById('login-page');
+            const app = document.getElementById('app-container');
+
+            if(!state.isLoggedIn) {
+                login.classList.remove('hidden');
+                app.classList.add('hidden');
+                return;
+            }
+            login.classList.add('hidden');
+            app.classList.remove('hidden');
+
+            // Dashboard
+            document.getElementById('view-nama').innerText = state.profil.nama;
+            document.getElementById('view-nip').innerText = 'NIP. ' + state.profil.nip;
+            document.getElementById('view-unit').innerText = state.profil.unit;
+            if(state.profil.foto) {
+                document.getElementById('view-foto').src = state.profil.foto;
+                document.getElementById('preview-foto').src = state.profil.foto;
+            }
+            document.getElementById('count-siswa').innerText = state.siswa.length;
+            document.getElementById('count-jurnal').innerText = state.jurnal.length;
+            document.getElementById('date-now').innerText = new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+            // Profil Inputs
+            document.getElementById('set-nama').value = state.profil.nama;
+            document.getElementById('set-nip').value = state.profil.nip;
+            document.getElementById('set-unit').value = state.profil.unit;
+            document.getElementById('set-jabatan').value = state.profil.jabatan;
+
+            // Jurnal List
+            document.getElementById('jurnal-list').innerHTML = state.jurnal.map(j => `
+                <div class="bg-white p-6 rounded-[2rem] border border-slate-100 relative group">
+                    <button onclick="delJurnal(${j.id})" class="absolute top-4 right-4 text-slate-200 hover:text-red-400 transition-colors"><i class="fas fa-trash-alt"></i></button>
+                    <span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg uppercase">Kelas ${j.kls}</span>
+                    <p class="text-[10px] text-slate-400 font-bold mt-2">${j.tgl}</p>
+                    <h3 class="font-bold text-slate-800 mt-2 mb-2 leading-tight">${j.materi}</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed italic line-clamp-3">${j.ket}</p>
+                </div>
+            `).join(state.jurnal.length === 0 ? '<p class="col-span-2 text-center p-12 text-slate-300 italic">Belum ada kegiatan</p>' : '');
+
+            // Siswa List
+            document.getElementById('siswa-list').innerHTML = state.siswa.map(s => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-4 font-bold text-sm">${s.nama}</td>
+                    <td class="p-4 text-center"><span class="bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-1 rounded-md">KLS ${s.kls}</span></td>
+                    <td class="p-4 text-center font-black text-emerald-600">${s.nilai}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="delSiswa(${s.id})" class="text-slate-200 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+            `).join(state.siswa.length === 0 ? '<tr><td colspan="4" class="p-10 text-center text-slate-300 italic">Belum ada siswa</td></tr>' : '');
+        }
+
+        // Service Worker (Offline Support)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const blob = new Blob([`
+                    self.addEventListener('install', e => self.skipWaiting());
+                    self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+                `], {type: 'text/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(blob));
+            });
+        }
+
+        window.onload = render;
+    </script>
+</body>
+</html>
